@@ -1,0 +1,792 @@
+---
+openapi: 3.0.0
+info:
+  title: Keybe eCommerce Integration API
+  description: API que permiten integrar Keybe con diferentes eCommerces a traves de las funcionalidades:<br> - Carrito Abandonado. Se implementa usando los servicios de enviar notificacion por whatsapp, sms o email. Ej. <br> - Compra Exitosa. <br> - Envio de NPS / CSAT.<br> - Sincronizacion de contactos <br> - Aceptacion Habeas Data.
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.3
+servers:
+- url: /
+tags:
+- name: notifications/whatsapp
+  description: enviar mensajes via whatsapp. Este servicio se puede usar para notificar visita de productos, carritos abandonados, compra extiosa, estado de pedido.
+- name: notifications/sms
+  description: enviar mensajes sms. Este servicio se puede usar para notificar visita de productos, carritos abandonados, compra extiosa, estado de pedido.
+- name: notifications/email
+  description: enviar emails. Este servicio se puede usar para notificar visita de productos, carritos abandonados, compra extiosa, estado de pedido.
+- name: NPS
+  description: NPS / CSAT (configuración y envio de encuestas NPS / CSAT)
+- name: Users
+  description: Listar, crear y actualizar usuarios. Servicios que se pueden usar para configurar sincronizacion de contactos y Validacion aceptacion de Habeas Data.
+paths:
+  /companies/{companyUUID}/apps/{appUUID}/users:
+    get:
+      tags:
+      - Users
+      summary: obtiene una lista de usuarios basado en los filtros enviados
+      description: Este endpoint permite obtener los usuarios anexados a una compañia, permitiendo de esta manera el listado y filtrado
+      operationId: getUsers
+      parameters:
+      - name: companyUUID
+        in: path
+        description: Id de la compañia
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: appUUID
+        in: path
+        description: Id del cliente
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: numero de pagina
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: number
+      - name: limit
+        in: query
+        description: numero de resultados por pagina
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: number
+      - name: search
+        in: query
+        description: texto a buscar
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: userId
+        in: query
+        description: id del usuario
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: name
+        in: query
+        description: nombre del usuario
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: email
+        in: query
+        description: email del usuario
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: emailValidationResult
+        in: query
+        description: resultado de la validacion del email
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: verified
+        in: query
+        description: usuario verificado
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: sortBy
+        in: query
+        description: campo por el cual se ordenaran los resultados
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: extradata
+        in: query
+        description: id del usuario
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: json
+          example: 'extradata: [{ "field": "habeas_data", "value":  value, "access": "private" }]'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersResponse'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    post:
+      tags:
+      - Users
+      summary: Crea un nuevo usuario
+      description: |-
+        Este endpoint permite la creacion de un usuario para una compañia en especifico, asi mismo, se puede anexar la extradata necesaria para la creacion del usuario, cabe resaltar que los campos de extradata deben ser creados previamente en el aplicativo dentro de keybe, por ejemplo: <br />
+          <code>
+          {
+            <br />"email": "ejemp@hotmail.com",
+            <br />"name": "ejemplo",
+            <br />"lastName": "ejemplo",
+            <br />"phone": "ejemplo",
+            <br />"extraData": [
+            <br />{
+              <br />"field": "Tienda",
+              <br />"value": "maderkit"
+            <br />},
+            <br />{
+              <br />"field": "Origen",
+              <br />"value": "VTEX"
+            <br />},
+          <br />]
+          <br />}
+          </code>
+      operationId: createUser
+      parameters:
+      - name: companyUUID
+        in: path
+        description: Id de la compañia
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: appUUID
+        in: path
+        description: Id del cliente
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://admin.keybe.bio
+  /companies/{companyUUID}/apps/{appUUID}/users/{userId}:
+    put:
+      tags:
+      - Users
+      summary: Permita actulizar la informacion de un usuario, su extradata, la aceptacion de habeas data.
+      description: "Este endpoint permite actualizar un usuario especifico junto con la extradata que posea, sin embargo, debe tenerse en cuenta que el correo electronico no puede ser anexado a esta peticion, si se hace no se actualizara el usuario, por ejemplo para actualizar la habeas data del usuario, utulizamos el siente cuerpo: <br/> <code> {<br/>extradata: [\n    { <br/>\"field\": \"habeas_data\", <br/>\"value\":  \"true\", <br/>\"access\": \"private\" }\n  <br/>]<br/>}</code>\n  <br/>\n  <br/>\n  <b>Nota: Para habeas data debe tener el campo habeas_data configurado como extradata en \"Personas\" en la plataforma Keybe. "
+      operationId: updateUser
+      parameters:
+      - name: companyUUID
+        in: path
+        description: Id de la compañia
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: appUUID
+        in: path
+        description: Id del cliente
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: userId
+        in: path
+        description: Id del usuario
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersResponse'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://admin.keybe.bio
+  /company/{companyUUID}/app/{appUUID}/templates/get-templates:
+    get:
+      tags:
+      - notifications/whatsapp
+      summary: obtiene la lista de templates de whatsapp configurados para la compañia
+      description: Este endpoint permite obtener todos los templates disponibles en la compañia, los datos suministrados en por este endpoint son necesarios para enviar mensajes via whatsapp<br/>
+      operationId: getTemplates
+      parameters:
+      - name: companyUUID
+        in: path
+        description: Id de la compañia
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: appUUID
+        in: path
+        description: Id del cliente
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: userHost
+        in: query
+        description: numero de la linea que tiene configurados los templates
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateResponse'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://conversationsapi.kbe.ai
+  /company/{companyUUID}/app/{appUUID}/templates/send-template:
+    post:
+      tags:
+      - notifications/whatsapp
+      summary: Envia una notificacion de whatsapp usando un template
+      description: |-
+        Este endpoint permite el envio de mensajes via whatsapp, segun los templates disponibles en la compañia, por ejemplo para un carrito abandonado, podria enviarse el siguiente cuerpo:<br/>
+          <code>{
+            <br/>&nbsp;&nbsp;"name": "john Doe",
+            <br/>&nbsp;&nbsp;"phone": "+1544332211",
+            <br/>&nbsp;&nbsp;"message": "Hola jhon doe, dejaste un carrito abandonado en al tienda &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;con el link https://tienda.com
+          <br/>}</code>
+          <br/>
+          <br/><strong>Nota: Es importante tener claro el template que se implementara para el envio del mensaje por medio del servicio</span>
+      operationId: sendTemplate
+      parameters:
+      - name: companyUUID
+        in: path
+        description: Id de la compañia
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: appUUID
+        in: path
+        description: Id del cliente
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/WhatsappMessage'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendTemplateResponse'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://conversationsapi.kbe.ai
+  /httpapi/v1/channels/sms:
+    post:
+      tags:
+      - notifications/sms
+      summary: Envia una notificacion via SMS
+      description: 'Este endpoint permite el envio de sms, utilizando un mensaje personalizado por el cliente a la hora de ser enviado, por ejemplo:<br/> <code>{ <br/>&nbsp;&nbsp;appUUID: asdk7932ns <br/>&nbsp;&nbsp;phone: ''+154744556671'' <br/>&nbsp;&nbsp;message: HOla, Jhon, dejaste un carrito abandonado en la tienda http://tienda.com <br/>}</code>'
+      operationId: sendSms
+      requestBody:
+        $ref: '#/components/requestBodies/SmsMessage'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsMessage'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://channelshttp.keybe.app
+  /httpapi/v1/channels/emails:
+    post:
+      tags:
+      - notifications/email
+      summary: Envia email
+      description: 'Este endpoint permite el envio de correos electronicos a los usuarios, utilizando mensajes personalizados suministrados por el cliente a la hora del envio, por ejemplo: '
+      operationId: sendEmail
+      requestBody:
+        $ref: '#/components/requestBodies/EmailMessage'
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailMessage'
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "500":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+      security:
+      - BearerAuth: []
+    servers:
+    - url: https://channelshttp.keybe.app
+  /nps:
+    post:
+      tags:
+      - NPS
+      summary: Envia un NPS / CSAT
+      description: Permite enviar una encuesta NPS / CSAT a un numero de celular via Whatsapp
+      operationId: nps-createSend
+      requestBody:
+        $ref: '#/components/requestBodies/NPSCreate'
+      responses:
+        "200":
+          description: Success to create an NPS Answer and generate the eventBridge to send the NPS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NPSCreateResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralBadResponse'
+        "500":
+          description: An unexpected error has occurred or failed to create
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralBadResponse'
+    servers:
+    - url: https://flows.keybe.app
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        UUID:
+          type: string
+        userId:
+          type: string
+        name:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        emailValidationResult:
+          type: string
+        verified:
+          type: boolean
+        sortBy:
+          type: string
+        extradata:
+          type: string
+          format: json
+    UsersResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    UserResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/User'
+    WhatsappTemplate:
+      type: object
+      properties:
+        hasAccess:
+          type: boolean
+        type:
+          type: string
+        templateName:
+          type: string
+        templateId:
+          type: string
+        userHost:
+          type: string
+        companyUUID:
+          type: string
+        appUUID:
+          type: string
+        _id:
+          type: string
+        __v:
+          type: string
+        customName:
+          type: string
+        provider:
+          type: string
+        providerTemplateId:
+          type: string
+        providerTemplateName:
+          type: string
+        templateMessage:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+    WhatsappMessage:
+      type: object
+      properties:
+        templateId:
+          type: string
+        templateParams:
+          type: array
+          items:
+            type: string
+        userGuest:
+          type: string
+        companyUUID:
+          type: string
+        userHost:
+          type: string
+        appUUID:
+          type: string
+        templateMessage:
+          type: string
+    WhatsappMessageResponseItem:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        roomId:
+          type: string
+        messageId:
+          type: string
+    SmsMessage:
+      type: object
+      properties:
+        appUUID:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+        source:
+          type: string
+        callback_url:
+          type: string
+        sms_provider_pk:
+          type: string
+        is_premium:
+          type: boolean
+    EmailAttachment:
+      type: object
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+        content:
+          type: string
+    EmailMessage:
+      type: object
+      properties:
+        appUUID:
+          type: string
+        companyUUID:
+          type: string
+        sender_name:
+          type: string
+        sender_email:
+          type: string
+        sender_domain:
+          type: string
+        email_to:
+          type: string
+        source:
+          type: string
+        subject:
+          type: string
+        htmlBody:
+          type: string
+        textBody:
+          type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAttachment'
+        callback_url:
+          type: string
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: object
+    TemplateResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WhatsappTemplate'
+    SendTemplateResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/WhatsappMessageResponseItem'
+    GeneralBadResponse:
+      required:
+      - message
+      - success
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Message error
+    NPSCreate:
+      required:
+      - action
+      - appUUID
+      - countryCode
+      - countryName
+      - phone
+      - sender
+      type: object
+      properties:
+        appUUID:
+          type: string
+          example: 73d9e71l2b5xc8z
+        companyUUID:
+          type: string
+          example: l6k7n6hl2b5xc3x
+        action:
+          type: string
+          example: customerService
+          enum:
+          - customerService
+          - support
+          - sales
+        phone:
+          type: string
+          description: Send with extension
+          example: +573214342027
+        sender:
+          type: string
+          description: 'Sender type. Example: trigger, bot, adviser, etc'
+          example: trigger
+        countryCode:
+          type: string
+          description: 'Example: CO, MX, US'
+          example: CO
+        countryName:
+          type: string
+          example: Colombia
+    NPSCreateResponse:
+      required:
+      - data
+      - success
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/NPSCreateResponseData'
+    NPSCreateResponseData:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          type: string
+          example: 2BM9ePseMaLT2mecKHRMCudRkaN
+  requestBodies:
+    User:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+    WhatsappMessage:
+      description: Mensaje a enviar por whatsapp
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WhatsappMessage'
+      required: true
+    SmsMessage:
+      description: Mensaje a enviar via SMS
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WhatsappMessage'
+      required: true
+    EmailMessage:
+      description: Mensaje a enviar via Email
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WhatsappMessage'
+      required: true
+    NPSCreate:
+      description: Encuesta NPS / CSAT a enviar
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NPSCreate'
+      required: true
+  securitySchemes:
+    BearerAuth:
+      type: http
+      description: Hace referencia a la clave publica que cada usuario encuentra en Keybe en <b>"Configuracion > Apps > Api Keys > Public Key"</b>. <br><b>Ej.</b> bxynl0vl3uzxgv0
+      scheme: bearer
